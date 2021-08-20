@@ -40,6 +40,32 @@ func listPermissions(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	if projectId != "" {
+		for _, userGroup := range userGroups {
+			projectRoles, err := enumerator.GetProjectRoles(ctx, userGroup.GroupPrincipalName, projectId)
+			if err != nil {
+				return err
+			}
+			if len(projectRoles) > 0 {
+				fmt.Printf("Group %s provides the following project roles in project %s:\n", userGroup.DisplayName, projectId)
+				fmt.Printf("%v\n", projectRoles)
+			}
+		}
+	}
+
+	if clusterId != "" {
+		for _, userGroup := range userGroups {
+			clusterRoles, err := enumerator.GetClusterRoles(ctx, userGroup.GroupPrincipalName, clusterId)
+			if err != nil {
+				return err
+			}
+			if len(clusterRoles) > 0 {
+				fmt.Printf("Group %s provides the following cluster roles in cluster %s:\n", userGroup.DisplayName, clusterId)
+				fmt.Printf("%v\n", clusterRoles)
+			}
+		}
+	}
 	for _, userGroup := range userGroups {
 		globalRoles, err := enumerator.GetGlobalRoles(ctx, userGroup.GroupPrincipalName)
 		if err != nil {

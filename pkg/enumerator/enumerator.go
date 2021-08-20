@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbason/rancher-user-permissions/pkg/util"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	managementv3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -65,4 +66,38 @@ func GetGlobalRoles(ctx context.Context, groupPrincipalName string) ([]string, e
 		}
 	}
 	return globalRoles, nil
+}
+
+func GetClusterRoles(ctx context.Context, groupPrincipalName string, clusterID string) ([]string, error) {
+	var clusterRoles []string
+	clusterRoleTemplateBindingList := &managementv3.ClusterRoleTemplateBindingList{}
+	err := util.K8sClient.List(ctx, clusterRoleTemplateBindingList, &client.ListOptions{
+		Namespace: clusterID,
+	})
+	if err != nil {
+		return clusterRoles, err
+	}
+	for _, clusterRoleTemplateBinding := range clusterRoleTemplateBindingList.Items {
+		if clusterRoleTemplateBinding.GroupPrincipalName == groupPrincipalName {
+			clusterRoles = append(clusterRoles, clusterRoleTemplateBinding.RoleTemplateName)
+		}
+	}
+	return clusterRoles, nil
+}
+
+func GetProjectRoles(ctx context.Context, groupPrincipalName string, projectID string) ([]string, error) {
+	var projectRoles []string
+	projectRoleTemplateBindingList := &managementv3.ProjectRoleTemplateBindingList{}
+	err := util.K8sClient.List(ctx, projectRoleTemplateBindingList, &client.ListOptions{
+		Namespace: projectID,
+	})
+	if err != nil {
+		return projectRoles, err
+	}
+	for _, projectRoleTemplateBinding := range projectRoleTemplateBindingList.Items {
+		if projectRoleTemplateBinding.GroupPrincipalName == groupPrincipalName {
+			projectRoles = append(projectRoles, projectRoleTemplateBinding.RoleTemplateName)
+		}
+	}
+	return projectRoles, nil
 }
